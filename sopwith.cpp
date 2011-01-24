@@ -1,3 +1,7 @@
+/* Sopwith by Jon Rafkind
+ * Originally created sometime around 1998-1999
+ */
+
 #include <allegro.h>
 #include "trigtable.h"
 #include "sound.h"
@@ -166,6 +170,7 @@ struct mission_rec {
 
 /***********************VARIABLES********************************************/
 
+/* I was way into pascal at the time */
 #define repeat do {
 #define until( y ) } while ( !y );
 
@@ -249,6 +254,8 @@ DATAFILE * data_snd;
 /****************************************************************************/
 
 void YIELD(){
+    rest(1);
+    /*
 	#ifdef UNIX
 	struct timeval tv;
 	tv.tv_sec = 0;
@@ -258,6 +265,7 @@ void YIELD(){
 	//sleep(1);
 	yield_timeslice();
 	#endif
+        */
 }
 
 int get_width( enum build_type what ) {
@@ -468,6 +476,7 @@ enum build_type get_build_type( int f ) {
                 case 4   :  tr = oil_tower;break;
                 case 5   :  tr = gun;break;
                 case 6   :  tr = windmill;break;
+                default: tr = cow; break;
         }
         return tr;
 
@@ -1039,7 +1048,7 @@ void first_init() {
 
         set_gfx_mode( GFX_AUTODETECT_WINDOWED, screen_x, screen_y, screen_x, screen_y );
 
-        text_mode(-1);
+        // text_mode(-1);
         get_palette( original );
 
         work = create_bitmap( 640, 480 );
@@ -1083,7 +1092,7 @@ void draw_player() {
         rect( work, 10, 445, 10 + ps, 455, 24 );
 
 	char * str = int2str( player.score );
-        textprintf( work, font, 320, 465, 23, "SCORE: [%s] LIVES:[%d]", str, player.lives );
+        textprintf_ex( work, font, 320, 465, 23, -1, "SCORE: [%s] LIVES:[%d]", str, player.lives );
 	delete[] str;
 
         int plane_length = gen_plane_length;
@@ -1144,7 +1153,7 @@ void draw_plant( int x1, int y1, int x2, int y2, int phase ) {
         int yl = y2 - y1;
 
         rectfill( work, x1, y1, x2, y2, 43 );
-        int xr, yr;
+        int xr = 0, yr = 0;
         phase = ( phase / 2 ) % 21;
 
         switch ( phase ) {
@@ -1199,7 +1208,7 @@ void draw_plant( int x1, int y1, int x2, int y2, int phase ) {
 
         }
         line( work, ox, oy, x2, y1-5, 31 );
-        textprintf( work, font, x1, y1+2, 39, "POWER" );
+        textprintf_ex( work, font, x1, y1+2, 39, -1, "POWER" );
 
 }
 
@@ -3179,8 +3188,9 @@ void shot_move() {
 void make_a_plane( int w ) {
 
         int found = 0;
-        while ( enemy[ found ].alive && found < max_enemy )
+        while (found < max_enemy && enemy[found].alive){
                 found++;
+        }
 
         if ( found >= max_enemy )
                 return;
@@ -3620,9 +3630,9 @@ void enemy_move() {
 
 void debug() {
 
-        textprintf( screen, font, 1, 1, 31, "Debugging" );
-        textprintf( screen, font, 1, 10, 31, "X %d Y %d", player.my_plane.realx, player.my_plane.realy );
-        textprintf( screen, font, 1, 20, 31, "Camera %d", camera );
+        textprintf_ex( screen, font, 1, 1, 31, -1, "Debugging" );
+        textprintf_ex( screen, font, 1, 10, 31, -1, "X %d Y %d", player.my_plane.realx, player.my_plane.realy );
+        textprintf_ex( screen, font, 1, 20, 31, -1, "Camera %d", camera );
 
         readkey();
 
@@ -3701,10 +3711,10 @@ void run_game() {
 }
 
 
-void get_key( char * ls, int & keyx, int & cy) {
-        textprintf(screen,font,20,cy,31,"%s",ls);
+void get_key( const char * ls, int & keyx, int & cy) {
+        textprintf_ex(screen,font,20,cy,31, -1, "%s",ls);
         keyx = readkey() >> 8;
-        textprintf(screen,font,20+text_length(font,ls),cy,31,"%c",scancode_to_ascii(keyx) );
+        textprintf_ex(screen,font,20+text_length(font,ls),cy,31, -1, "%c",scancode_to_ascii(keyx) );
         cy += 10;
 }
 
@@ -3713,7 +3723,7 @@ void change_keys() {
 
         clear_to_color( screen, 24 );
         int cy = 280;
-        textprintf(screen,font,20,cy,31,"Keys" );cy+=10;
+        textprintf_ex(screen,font,20,cy,31, -1, "Keys" );cy+=10;
 
         get_key( "Accelerate:", K_ACCELERATE, cy );
         get_key( "Deccelerate:", K_DECCELERATE, cy );
@@ -3739,26 +3749,25 @@ void show_mission() {
                 for ( int r = 0; r< 639; r++ )
                         vline( screen, r, 0, 479, 24 );
 
-                text_mode( -1 );
-                textprintf( screen, font, 310, 240, 31, "MISSION %d", player.mission+1 );
+                textprintf_ex( screen, font, 310, 240, 31, -1, "MISSION %d", player.mission+1 );
 
                 int cy = 280;
-                textprintf( screen, font, 20, cy, 31, "KEYS" );cy+=10;
-                textprintf( screen, font, 20, cy, 31, "%c:Accelerate", scancode_to_ascii(K_ACCELERATE) );cy+=10;
-                textprintf( screen, font, 20, cy, 31, "%c:Deccelerate", scancode_to_ascii(K_DECCELERATE) );cy+=10;
-                textprintf( screen, font, 20, cy, 31, "%c:Rotate Left", scancode_to_ascii(K_TURNLEFT) );cy+=10;
-                textprintf( screen, font, 20, cy, 31, "%c:Rotate Right", scancode_to_ascii(K_TURNRIGHT) );cy+=10;
-                textprintf( screen, font, 20, cy, 31, "%c:Flip Ship", scancode_to_ascii(K_FLIP) );cy+=10;
-                textprintf( screen, font, 20, cy, 31, "%c:Bomb", scancode_to_ascii(K_NORMALBOMB) );cy+=10;
-                textprintf( screen, font, 20, cy, 31, "%c:Mirv Bomb", scancode_to_ascii(K_MULTIBOMB) );cy+=10;
-                textprintf( screen, font, 20, cy, 31, "%c:Death Head Bomb", scancode_to_ascii(K_SHOTBOMB) );cy+=10;
-                textprintf( screen, font, 20, cy, 31, "%c:Shoot. Unless changed, is SPACEBAR.", scancode_to_ascii(K_SHOOT) );cy+=10;
-                textprintf( screen, font, 20, cy, 31, "%c:Cannon", scancode_to_ascii(K_CANNON) );cy+=10;
-                textprintf( screen, font, 20, cy, 31, "%c:Go Home", scancode_to_ascii(K_HOME) );cy+=10;
-                textprintf( screen, font, 20, cy, 31, "E: Edit keys" ); cy += 10;
-                textprintf( screen,font, 20, cy, 31, "Q: Quit game" ); cy += 10;
+                textprintf_ex( screen, font, 20, cy, 31, -1, "KEYS" );cy+=10;
+                textprintf_ex( screen, font, 20, cy, 31, -1, "%c:Accelerate", scancode_to_ascii(K_ACCELERATE) );cy+=10;
+                textprintf_ex( screen, font, 20, cy, 31, -1, "%c:Deccelerate", scancode_to_ascii(K_DECCELERATE) );cy+=10;
+                textprintf_ex( screen, font, 20, cy, 31, -1, "%c:Rotate Left", scancode_to_ascii(K_TURNLEFT) );cy+=10;
+                textprintf_ex( screen, font, 20, cy, 31, -1, "%c:Rotate Right", scancode_to_ascii(K_TURNRIGHT) );cy+=10;
+                textprintf_ex( screen, font, 20, cy, 31, -1, "%c:Flip Ship", scancode_to_ascii(K_FLIP) );cy+=10;
+                textprintf_ex( screen, font, 20, cy, 31, -1, "%c:Bomb", scancode_to_ascii(K_NORMALBOMB) );cy+=10;
+                textprintf_ex( screen, font, 20, cy, 31, -1, "%c:Mirv Bomb", scancode_to_ascii(K_MULTIBOMB) );cy+=10;
+                textprintf_ex( screen, font, 20, cy, 31, -1, "%c:Death Head Bomb", scancode_to_ascii(K_SHOTBOMB) );cy+=10;
+                textprintf_ex( screen, font, 20, cy, 31, -1, "%c:Shoot. Unless changed, is SPACEBAR.", scancode_to_ascii(K_SHOOT) );cy+=10;
+                textprintf_ex( screen, font, 20, cy, 31, -1, "%c:Cannon", scancode_to_ascii(K_CANNON) );cy+=10;
+                textprintf_ex( screen, font, 20, cy, 31, -1, "%c:Go Home", scancode_to_ascii(K_HOME) );cy+=10;
+                textprintf_ex( screen, font, 20, cy, 31, -1, "E: Edit keys" ); cy += 10;
+                textprintf_ex( screen,font, 20, cy, 31, -1, "Q: Quit game" ); cy += 10;
 
-                textprintf( screen, font, 20, 460, 31, "Made by Jon Rafkind" );
+                textprintf_ex( screen, font, 20, 460, 31, -1, "Made by Jon Rafkind" );
 
                 clear_keybuf();
                 readkey();
@@ -3778,7 +3787,7 @@ void show_final_score() {
         clear( work );
 
 	char * str = int2str( player.score );
-        textprintf( screen, font, 300, 236, 39, "FINAL SCORE %s", str );
+        textprintf_ex( screen, font, 300, 236, 39, -1, "FINAL SCORE %s", str );
 	delete[] str;
 
         clear_keybuf();
