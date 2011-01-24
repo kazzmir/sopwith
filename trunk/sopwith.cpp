@@ -1,4 +1,4 @@
-#include "allegro.h"
+#include <allegro.h>
 #include "trigtable.h"
 #include "sound.h"
 #include <stdio.h>
