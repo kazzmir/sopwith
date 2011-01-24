@@ -230,6 +230,22 @@ int land[ max_land ];                             //the land that you see
 int camera = 0;                                   //camera to tell where to look
 int ultra_color = 0;
 
+#ifdef PANDORA
+int K_ACCELERATE = KEY_RIGHT;
+int K_DECCELERATE = KEY_LEFT;
+int K_TURNLEFT = KEY_UP;
+int K_TURNRIGHT = KEY_DOWN;
+int K_SHOOT = KEY_HOME;      // A
+int K_CANNON = KEY_DEL;      // Del
+int K_MULTIBOMB = KEY_END;   // B
+int K_NORMALBOMB = KEY_PGDN; // X
+int K_SHOTBOMB = KEY_PGUP;   // Y
+int K_FLIP = KEY_RSHIFT;     // L
+int K_HOME = KEY_H;
+int K_QUIT = KEY_Q;
+int K_EDIT = KEY_E;
+int K_SCREENSHOT = KEY_U;
+#else
 int K_SHOOT = KEY_SPACE;
 int K_CANNON = KEY_A;
 int K_MULTIBOMB = KEY_V;
@@ -241,6 +257,10 @@ int K_FLIP = KEY_STOP;
 int K_HOME = KEY_H;
 int K_ACCELERATE = KEY_X;
 int K_DECCELERATE = KEY_C;
+int K_QUIT = KEY_Q;
+int K_EDIT = KEY_E;
+int K_SCREENSHOT = KEY_U;
+#endif
 
 unsigned int grand_clock = 0;
 
@@ -572,7 +592,7 @@ void make_base( int who, bool mine ) {
 
                 }
 
-        } while ( too_close( min_x, (max_x-min_x), who ) || key[ KEY_Q ] );
+        } while ( too_close( min_x, (max_x-min_x), who ) || key[ K_QUIT ] );
 
         build[who].y = 0;
 
@@ -637,7 +657,7 @@ void set_buildings() {
 
                 do {
                         build[me].x = random() % ( max_land - 200 ) + 100;
-                } while ( too_close( build[me].x, build[me].width, me ) || key[ KEY_Q ] );
+                } while ( too_close( build[me].x, build[me].width, me ) || key[ K_QUIT ] );
 
                 build[me].y = 0;
 
@@ -1046,12 +1066,16 @@ void first_init() {
         srandom( time( NULL ) );
         set_color_depth( 8 );
 
+	#ifdef PANDORA
+        set_gfx_mode( GFX_AUTODETECT_FULLSCREEN, screen_x, screen_y, screen_x, screen_y );
+	#else
         set_gfx_mode( GFX_AUTODETECT_WINDOWED, screen_x, screen_y, screen_x, screen_y );
+	#endif
 
         // text_mode(-1);
         get_palette( original );
 
-        work = create_bitmap( 640, 480 );
+        work = create_bitmap( screen_x, screen_y );
         clear( work );
         land_work = create_bitmap( max_land, max_land_height );
 
@@ -3642,7 +3666,7 @@ void debug() {
 bool finished() {
 
 	if ( player.lives <= 0 ) return true;
-	if ( key[KEY_Q] ) return true;
+	if ( key[K_QUIT] ) return true;
         for ( int r = 1; r< max_buildings; r++ )
                 if ( build[r].alive && !build[r].rubble )
 			return false;
@@ -3695,7 +3719,7 @@ void run_game() {
 
                 if ( dr ) draw_environment();
 
-		if ( key[ KEY_U ] ){
+		if ( key[ K_SCREENSHOT ] ){
         		PALETTE xx;
         		get_palette( xx );
 			save_bitmap( "screenshot.bmp", screen, xx );
@@ -3772,7 +3796,7 @@ void show_mission() {
                 clear_keybuf();
                 readkey();
                 quit = true;
-                if ( key[KEY_E] ) {
+                if ( key[K_EDIT] ) {
                         quit = false;
                         change_keys();
                 }
@@ -3816,19 +3840,19 @@ int main() {
 
         do {
 
-                if ( !key[KEY_Q] )
+                if ( !key[K_QUIT] )
                         show_mission();
 
                 run_game();
                 ultra_color = 0;
 
-                if ( !key[KEY_Q] && player.mission < max_missions )
+                if ( !key[K_QUIT] && player.mission < max_missions )
                         re_init_all();
 
                 if ( player.mission >= max_missions || player.lives <= 0 )
                         minor_init();
 
-        } while ( !key[ KEY_Q ] && player.mission < max_missions && player.lives > 0 );
+        } while ( !key[ K_QUIT ] && player.mission < max_missions && player.lives > 0 );
 
         show_final_score();
 
