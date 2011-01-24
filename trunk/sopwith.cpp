@@ -189,7 +189,7 @@ int lastfps = 80;
 #define max_land 3500
 #define max_land_height 300
 #define max_buildings 50
-#define max_expl 50
+#define max_expl 100
 #define max_bomb 20
 #define max_bomb_left 12
 #define max_shot_left 100
@@ -213,7 +213,11 @@ int lastfps = 80;
 #define angular_1 135
 #define angular_2 180
 
+#ifdef PANDORA
+#define screen_x 800
+#else
 #define screen_x 640
+#endif
 #define screen_y 480
 
 #define GAME_SPEED 19
@@ -2073,7 +2077,7 @@ void draw_environment() {
         if ( player.my_plane.realy - minimum < 0 )
                 ty = ty + ( player.my_plane.realy - minimum );
 
-        blit( land_work, work, camera, ty, 0, 480-max_land_height, 640, max_land_height );
+        blit( land_work, work, camera, ty, 0, screen_y-max_land_height, screen_x, max_land_height );
 
         draw_buildings();
         if ( player.my_plane.dead_phase <= 0 )
@@ -2088,7 +2092,7 @@ void draw_environment() {
         //textprintf( work, font, 1, 20, 31, "X:%d Y:%d", player.my_plane.realx, player.my_plane.realy );
 
         //blur( work );
-        blit( work, screen, 0, 0, 0, 0, 640, 480 );
+        blit( work, screen, 0, 0, 0, 0, screen_x, screen_y);
 
 	/*
         RGB change;
@@ -2283,8 +2287,9 @@ void chop_land( int wx, int wy, int power ) {
 void make_explosion( int x, int y, double walkx, double walky, int rad ) {
 
         int found = 0;
-        while ( explr[ found ].alive && found < max_expl )
+        while (found < max_expl && explr[ found ].alive){
                 found++;
+        }
 
         if ( found >= max_expl )
                 return;
@@ -3770,8 +3775,8 @@ void show_mission() {
 
         while ( !quit ) {
                 clear( screen );
-                for ( int r = 0; r< 639; r++ )
-                        vline( screen, r, 0, 479, 24 );
+                for ( int r = 0; r< screen_x - 1; r++ )
+                        vline( screen, r, 0, screen_y - 1, 24 );
 
                 textprintf_ex( screen, font, 310, 240, 31, -1, "MISSION %d", player.mission+1 );
 
